@@ -27,7 +27,7 @@ load_dotenv(Path(__file__).parent / ".env")
 # Configuration — fill these in before running
 # ---------------------------------------------------------------------------
 VAULT_PUBLISH_DIR    = Path("/Users/jalen/Library/Mobile Documents/iCloud~md~obsidian/Documents/Jalen's Notes/51- Publish")   # Obsidian folder you drop posts into
-VAULT_ATTACHMENTS_DIR = Path("/Users/jalen/Library/Mobile Documents/iCloud~md~obsidian/Documents/Jalen's Notes/51- Publish/attachments")  # Where Obsidian stores attachments
+VAULT_ATTACHMENTS_DIR = Path("/Users/jalen/Library/Mobile Documents/iCloud~md~obsidian/Documents/Jalen's Notes/80- Attachments")  # Where Obsidian stores attachments
 POSTS_DIR            = Path("/Users/jalen/Projects/jhlj.studio/_posts")   # _posts/ inside your Jekyll repo
 REPO_DIR             = Path("/Users/jalen/Projects/jhlj.studio")   # Root of your GitHub Pages git repo
 
@@ -222,6 +222,35 @@ def build_jekyll_filename(fm: dict, source_stem: str) -> str:
 # Git helpers
 # ---------------------------------------------------------------------------
 
+def git_delete_and_push(post_path: Path) -> bool:
+    """Remove a post from git, commit, and push. Returns True on success."""
+    try:
+        rel = post_path.relative_to(REPO_DIR)
+        subprocess.run(
+            ["git", "rm", str(rel)],
+            cwd=REPO_DIR, check=True, capture_output=True,
+        )
+        result = subprocess.run(
+            ["git", "commit", "-m", f"unpublish: {post_path.name}"],
+            cwd=REPO_DIR, capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            if "nothing to commit" in result.stdout + result.stderr:
+                log_info("Nothing to commit.")
+                return True
+            log_err(f"git commit failed: {result.stderr.strip()}")
+            return False
+        subprocess.run(
+            ["git", "push"],
+            cwd=REPO_DIR, check=True, capture_output=True,
+        )
+        log_ok(f"Unpublished {post_path.name}")
+        return True
+    except subprocess.CalledProcessError as exc:
+        log_err(f"git error: {exc.stderr.decode().strip() if exc.stderr else exc}")
+        return False
+
+
 def git_commit_and_push(post_path: Path) -> bool:
     """Stage only _posts/, commit, and push. Returns True on success."""
     try:
@@ -272,13 +301,14 @@ def process_file(source_path: Path) -> None:
     fm, body = parse_or_generate_front_matter(source_path, raw)
     log_ok("Front matter ready")
 
-    # 2. Strip wiki links
-    body = strip_wiki_links(body)
-    log_ok("Wiki links stripped")
-
-    # 3. Process and upload images
+    # 2. Process and upload images (must happen before wiki link stripping,
+    #    otherwise ![[image.jpg]] gets corrupted to !image.jpg)
     body = process_images(body)
     log_ok("Images processed")
+
+    # 3. Strip wiki links
+    body = strip_wiki_links(body)
+    log_ok("Wiki links stripped")
 
     # 4. Build the final post content
     output = render_front_matter(fm) + body
@@ -301,6 +331,21 @@ def process_file(source_path: Path) -> None:
     dest = PUBLISHED_DIR / source_path.name
     shutil.move(str(source_path), dest)
     log_ok(f"Moved original → {dest}")
+
+
+def delete_post(deleted_path: Path) -> None:
+    """Find and remove the Jekyll post that corresponds to a deleted published file."""
+    print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Unpublishing: {deleted_path.name}")
+
+    slug = slugify(deleted_path.stem)
+    matches = [p for p in POSTS_DIR.glob("*.md") if slugify(p.stem[11:]) == slug]
+
+    if not matches:
+        log_err(f"No matching post found in _posts/ for '{deleted_path.name}'")
+        return
+
+    post_path = matches[0]
+    git_delete_and_push(post_path)
 
 
 # ---------------------------------------------------------------------------
@@ -327,6 +372,12 @@ class MarkdownHandler(FileSystemEventHandler):
     def on_moved(self, event) -> None:
         if not event.is_directory and event.dest_path.endswith(".md"):
             self._schedule(event.dest_path)
+
+    def on_deleted(self, event) -> None:
+        if not event.is_directory and event.src_path.endswith(".md"):
+            p = Path(event.src_path)
+            if p.parent == PUBLISHED_DIR:
+                delete_post(p)
 
     def flush_pending(self) -> None:
         """Called on each poll tick — fire handlers whose debounce has elapsed."""
@@ -361,7 +412,7 @@ def main() -> None:
 
     handler  = MarkdownHandler()
     observer = Observer()
-    observer.schedule(handler, str(VAULT_PUBLISH_DIR), recursive=False)
+    observer.schedule(handler, str(VAULT_PUBLISH_DIR), recursive=True)
     observer.start()
 
     try:
