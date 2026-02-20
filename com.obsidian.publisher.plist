@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+    <!-- Unique label for launchd to identify this job -->
+    <key>Label</key>
+    <string>com.obsidian.publisher</string>
+
+    <!-- Full path to the Python interpreter and the script.
+         Use the interpreter from your virtual environment if you have one,
+         e.g. /Users/you/.venv/bin/python3                                  -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/jalen/Projects/jhlj.studio/.venv/bin/python3</string>        <!-- e.g. /usr/local/bin/python3 -->
+        <string>/Users/jalen/Projects/jhlj.studio/obsidian_publisher.py</string>        <!-- e.g. /Users/you/obsidian_publisher.py -->
+    </array>
+
+    <!-- Start automatically when the user logs in -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Restart the script if it exits unexpectedly -->
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- Normal output (✓ lines) -->
+    <key>StandardOutPath</key>
+    <string>/tmp/obsidian-publisher.log</string>
+
+    <!-- Error output (✗ lines, tracebacks) -->
+    <key>StandardErrorPath</key>
+    <string>/tmp/obsidian-publisher-err.log</string>
+
+    <!-- Optional: set environment variables the script needs
+         (useful if your shell profile isn't sourced by launchd)            -->
+    <!--
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+    -->
+
+</dict>
+</plist>

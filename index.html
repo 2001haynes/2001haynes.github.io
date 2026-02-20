@@ -6,194 +6,34 @@
     <title>jhlj.studio</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            background: #0a0a0a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Courier New', Courier, monospace;
-            padding: 20px;
-        }
-
-        .terminal-window {
-            width: 100%;
-            max-width: 800px;
-            background: #1e1e1e;
-            border-radius: 8px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
-        }
-
-        .terminal-header {
-            background: #2d2d2d;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .terminal-button {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .terminal-button.close { background: #ff5f56; }
-        .terminal-button.minimize { background: #ffbd2e; }
-        .terminal-button.maximize { background: #27c93f; }
-
-        .terminal-title {
-            color: #8a8a8a;
-            font-size: 13px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .terminal-body {
-            background: #1e1e1e;
-            color: #00ff00;
-            padding: 20px;
-            min-height: 400px;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        .terminal-line {
-            margin-bottom: 8px;
-        }
-
-        .command {
-            color: #00ff00;
-        }
-
-        .output {
-            color: #d4d4d4;
-            margin-left: 0;
-        }
-
-        .cursor {
-            display: inline-block;
-            width: 10px;
-            height: 18px;
-            background: #00ff00;
-            animation: blink 1s step-end infinite;
-            margin-left: 2px;
-        }
-
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
-        }
-
-        .prompt {
-            color: #00ff00;
-        }
-
-        a {
-            color: #00ff00;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
+        body { font-family: 'Courier New', monospace; max-width: 680px; margin: 60px auto; padding: 0 20px; color: #111; background: #fff; line-height: 1.8; }
+        a { color: #111; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .cmd { color: #888; margin-top: 32px; margin-bottom: 4px; font-size: 13px; }
+        .cmd:first-child { margin-top: 0; }
+        p { margin: 0; }
+        .cursor { display: inline-block; width: 9px; height: 15px; background: #111; animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 2px; }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
     </style>
 </head>
 <body>
-    <div class="terminal-window">
-        <div class="terminal-header">
-            <div class="terminal-button close"></div>
-            <div class="terminal-button minimize"></div>
-            <div class="terminal-button maximize"></div>
-            <div class="terminal-title">jhlj.studio </div>
-        </div>
-        <div class="terminal-body" id="terminal">
-            <div class="terminal-line"><span class="cursor"></span></div>
-        </div>
-    </div>
+    <p class="cmd">$ welcome</p>
+    <p>Jalen Javurek</p>
+    <p>engineering + design + embedded systems = natural user experience</p>
 
-    <script>
-        const terminal = document.getElementById('terminal');
-        const typeSpeed = 20; // milliseconds per character
-        const commandDelay = 500; // delay before typing next command
-        const lineDelay = 300; // delay before typing next line
+    <p class="cmd">$ work</p>
+    <p>RUNA — futuristic rune stones</p>
+    <p>Interactive Musical Instruments</p>
+    <p>dot</p>
+    <br>
+    <p><a href="/blog"><b>What I'm Working On</b></a></p>
 
-        const content = [
-            { type: 'command', text: '$ welcome' },
-            { type: 'output', text: '> professional engineering and design by Jalen Javurek' },
-            { type: 'output', text: '> specializing in embedded systems and natural user experiece' },
-            { type: 'blank' },
-            { type: 'command', text: '$ work' },
-            { type: 'output', text: '> RUNA - futuristic rune stones' },
-            { type: 'output', text: '> Interactive Musical Instruments' },
-            { type: 'output', text: '> dot' },
-            { type: 'blank' },
-            { type: 'command', text: '$ contact' },
-            { type: 'output', text: '> Email: jalen@jhlj.studio' },
-            { type: 'output', text: '> Instagram: @jhlj.studio' },
-            { type: 'blank' },
-            { type: 'prompt', text: '$ ' }
-        ];
+    <p class="cmd">$ contact</p>
+    <p><a href="mailto:jalen@jhlj.studio">jalen@jhlj.studio</a></p>
+    <p><a href="https://instagram.com/jhlj.studio" target="_blank">@jhlj.studio</a></p>
 
-        let lineIndex = 0;
-        let charIndex = 0;
-        let currentLine = null;
+    
 
-        function typeText() {
-            if (lineIndex >= content.length) {
-                // Typing complete, add blinking cursor
-                const cursorSpan = document.createElement('span');
-                cursorSpan.className = 'cursor';
-                terminal.lastElementChild.appendChild(cursorSpan);
-                return;
-            }
-
-            const line = content[lineIndex];
-
-            if (charIndex === 0) {
-                // Create new line element
-                currentLine = document.createElement('div');
-                currentLine.className = 'terminal-line';
-
-                if (line.type === 'blank') {
-                    terminal.appendChild(currentLine);
-                    lineIndex++;
-                    setTimeout(typeText, lineDelay);
-                    return;
-                }
-
-                const span = document.createElement('span');
-                span.className = line.type;
-                currentLine.appendChild(span);
-                terminal.appendChild(currentLine);
-            }
-
-            if (charIndex < line.text.length) {
-                const span = currentLine.querySelector(`.${line.type}`);
-                span.textContent += line.text[charIndex];
-                charIndex++;
-                setTimeout(typeText, typeSpeed);
-            } else {
-                // Line complete, move to next line
-                charIndex = 0;
-                lineIndex++;
-                const delay = line.type === 'command' ? commandDelay : lineDelay;
-                setTimeout(typeText, delay);
-            }
-        }
-
-        // Start typing animation
-        setTimeout(() => {
-            terminal.innerHTML = '';
-            typeText();
-        }, 500);
-    </script>
+    <p class="cmd">$<span class="cursor"></span></p>
 </body>
 </html>

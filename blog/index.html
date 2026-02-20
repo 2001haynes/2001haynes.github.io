@@ -1,0 +1,34 @@
+---
+layout: null
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>log — jhlj.studio</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+    <style>
+        body { font-family: 'Courier New', monospace; max-width: 680px; margin: 60px auto; padding: 0 20px; color: #111; background: #fff; line-height: 1.8; }
+        a { color: #111; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back { display: block; margin-bottom: 40px; font-size: 13px; }
+        h1 { font-size: 18px; margin-bottom: 32px; }
+        .post { display: grid; grid-template-columns: 100px 1fr; gap: 12px; margin-bottom: 12px; align-items: baseline; }
+        .date { color: #888; font-size: 12px; }
+        .project { font-size: 11px; color: #aaa; margin-left: 8px; }
+    </style>
+</head>
+<body>
+    <a class="back" href="/">← home</a>
+    <h1>log</h1>
+    {% for post in site.posts %}
+    <div class="post">
+        <span class="date">{{ post.date | date: "%Y-%m-%d" }}</span>
+        <span>
+            <a href="{{ post.url }}">{{ post.title }}</a>{% if post.project %}<span class="project">{{ post.project }}</span>{% endif %}
+        </span>
+    </div>
+    {% endfor %}
+</body>
+</html>

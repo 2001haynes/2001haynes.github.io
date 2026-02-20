@@ -1,2 +1,6 @@
 # Ignore jhljstudio.ai (file or directory)
 jhljstudio.ai
+
+# Environment secrets — never commit
+.env
+.venv/

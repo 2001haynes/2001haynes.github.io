@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page.title }} — jhlj.studio</title>
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+    <style>
+        body { font-family: 'Courier New', monospace; max-width: 680px; margin: 60px auto; padding: 0 20px; color: #111; background: #fff; line-height: 1.8; }
+        a { color: #111; }
+        .back { display: block; margin-bottom: 40px; font-size: 13px; }
+        h1 { font-size: 22px; margin-bottom: 6px; }
+        .date { color: #888; font-size: 13px; margin-bottom: 40px; }
+        h2 { font-size: 17px; margin: 32px 0 8px; }
+        p { margin-bottom: 16px; }
+        hr { border: none; border-top: 1px solid #eee; margin: 32px 0; }
+        img { max-width: 100%; }
+        code { background: #f4f4f4; padding: 1px 5px; }
+        pre { background: #f4f4f4; padding: 16px; overflow-x: auto; }
+        pre code { background: none; padding: 0; }
+        blockquote { border-left: 2px solid #ddd; margin: 0 0 16px; padding-left: 16px; color: #666; }
+    </style>
+</head>
+<body>
+    <a class="back" href="/blog">← blog</a>
+    <h1>{{ page.title }}</h1>
+    <div class="date">{{ page.date | date: "%Y-%m-%d" }}{% if page.project %} &nbsp;·&nbsp; {{ page.project }}{% endif %}</div>
+    {{ content }}
+</body>
+</html>

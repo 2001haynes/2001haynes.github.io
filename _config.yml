@@ -1,0 +1,10 @@
+title: jhlj.studio
+url: https://jhlj.studio
+permalink: /blog/:year/:month/:day/:title/
+exclude:
+  - obsidian_publisher.py
+  - com.obsidian.publisher.plist
+  - jhljstudio.ai
+  - .venv/
+  - README.md
+  - .env
