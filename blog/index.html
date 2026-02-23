@@ -14,21 +14,82 @@ layout: null
         a:hover { text-decoration: underline; }
         .back { display: block; margin-bottom: 40px; font-size: 13px; }
         h1 { font-size: 18px; margin-bottom: 32px; }
+        .folder { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; cursor: pointer; }
+        .folder:hover .folder-name { text-decoration: underline; }
+        .folder-name { font-size: 15px; }
+        .folder-count { color: #888; font-size: 12px; }
         .post { display: grid; grid-template-columns: 100px 1fr; gap: 12px; margin-bottom: 12px; align-items: baseline; }
         .date { color: #888; font-size: 12px; }
-        .project { font-size: 11px; color: #aaa; margin-left: 8px; }
+        #category-view { display: none; }
     </style>
 </head>
 <body>
     <a class="back" href="/">← home</a>
-    <h1>log</h1>
-    {% for post in site.posts %}
-    <div class="post">
-        <span class="date">{{ post.date | date: "%Y-%m-%d" }}</span>
-        <span>
-            <a href="{{ post.url }}">{{ post.title }}</a>{% if post.project %}<span class="project">{{ post.project }}</span>{% endif %}
-        </span>
+
+    <div id="folder-view">
+        <h1>log</h1>
+        {% for category in site.categories %}
+        {% assign display = category[1][0].project | default: category[0] %}
+        <div class="folder" onclick="showCategory('{{ category[0] }}')">
+            <span>[+]</span>
+            <span class="folder-name">{{ display }}</span>
+            <span class="folder-count">{{ category[1].size }} posts</span>
+        </div>
+        {% endfor %}
+        {% assign has_uncategorized = false %}
+        {% for post in site.posts %}{% unless post.category %}{% assign has_uncategorized = true %}{% endunless %}{% endfor %}
+        {% if has_uncategorized %}
+        <div class="folder" onclick="showCategory('_misc')">
+            <span>[+]</span>
+            <span class="folder-name">misc</span>
+            <span class="folder-count"></span>
+        </div>
+        {% endif %}
     </div>
-    {% endfor %}
+
+    <div id="category-view">
+        <a class="back" href="/blog" id="back-link" onclick="showFolders(); return false;">← log</a>
+        <h1 id="category-title"></h1>
+        <div id="category-posts"></div>
+    </div>
+
+    <script>
+    const cats = {
+        {% for category in site.categories %}
+        {% assign display = category[1][0].project | default: category[0] %}
+        "{{ category[0] }}": {
+            name: {{ display | jsonify }},
+            posts: [{% for post in category[1] %}{ title: {{ post.title | jsonify }}, url: "{{ post.url }}", date: "{{ post.date | date: '%Y-%m-%d' }}" }{% unless forloop.last %},{% endunless %}{% endfor %}]
+        },
+        {% endfor %}
+        "_misc": {
+            name: "misc",
+            posts: [{% for post in site.posts %}{% unless post.category %}{ title: {{ post.title | jsonify }}, url: "{{ post.url }}", date: "{{ post.date | date: '%Y-%m-%d' }}" },{% endunless %}{% endfor %}]
+        }
+    };
+
+    function showCategory(cat) {
+        const data = cats[cat];
+        if (!data || !data.posts.length) return;
+        document.getElementById('folder-view').style.display = 'none';
+        const cv = document.getElementById('category-view');
+        cv.style.display = 'block';
+        document.getElementById('category-title').textContent = data.name;
+        document.getElementById('category-posts').innerHTML = data.posts.map(p =>
+            `<div class="post"><span class="date">${p.date}</span><span><a href="${p.url}">${p.title}</a></span></div>`
+        ).join('');
+        location.hash = cat;
+    }
+
+    function showFolders() {
+        document.getElementById('folder-view').style.display = 'block';
+        document.getElementById('category-view').style.display = 'none';
+        history.pushState(null, '', '/blog');
+    }
+
+    if (location.hash) {
+        showCategory(location.hash.slice(1));
+    }
+    </script>
 </body>
 </html>

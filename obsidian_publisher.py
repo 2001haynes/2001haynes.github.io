@@ -288,6 +288,25 @@ def git_commit_and_push(post_path: Path) -> bool:
 # Core processing pipeline
 # ---------------------------------------------------------------------------
 
+def detect_category(source_path: Path) -> tuple[str | None, str | None]:
+    """
+    If source_path lives inside a direct subfolder of VAULT_PUBLISH_DIR
+    (e.g. 51- Publish/RUNA/post.md), return (slug, display_name).
+    Returns (None, None) for top-level files or files inside published/.
+    """
+    try:
+        rel = source_path.relative_to(VAULT_PUBLISH_DIR)
+    except ValueError:
+        return None, None
+    parts = rel.parts
+    if len(parts) < 2:
+        return None, None
+    folder = parts[0]
+    if folder == "published":
+        return None, None
+    return slugify(folder), folder
+
+
 def process_file(source_path: Path) -> None:
     print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Processing: {source_path.name}")
 
@@ -299,6 +318,14 @@ def process_file(source_path: Path) -> None:
 
     # 1. Parse / generate front matter
     fm, body = parse_or_generate_front_matter(source_path, raw)
+
+    # Inject category from subfolder name (e.g. 51- Publish/RUNA/post.md → category: runa)
+    cat_slug, cat_name = detect_category(source_path)
+    if cat_slug and "category" not in fm:
+        fm["category"] = cat_slug
+    if cat_name and "project" not in fm:
+        fm["project"] = cat_name
+
     log_ok("Front matter ready")
 
     # 2. Process and upload images (must happen before wiki link stripping,
