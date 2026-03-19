@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
 obsidian_publisher.py
-Watches an Obsidian publish folder, processes markdown files,
+Scans an Obsidian publish folder, processes markdown files,
 uploads images to Cloudinary, and deploys to GitHub Pages.
+Run manually (or via SwiftBar) when ready to publish.
 """
 
 import os
 import re
 import shutil
 import subprocess
-import time
 from datetime import datetime
 from pathlib import Path
 
@@ -17,8 +17,6 @@ import cloudinary
 import cloudinary.uploader
 import yaml
 from dotenv import load_dotenv
-from watchdog.events import FileSystemEventHandler
-from watchdog.observers import Observer
 
 # Load secrets from .env (never committed to git)
 load_dotenv(Path(__file__).parent / ".env")
@@ -37,9 +35,6 @@ CLOUDINARY_API_SECRET = os.environ["CLOUDINARY_API_SECRET"]
 
 # Subfolder inside VAULT_PUBLISH_DIR where processed files are moved
 PUBLISHED_DIR = VAULT_PUBLISH_DIR / "published"
-
-# Seconds to wait after a file event before processing (debounce)
-DEBOUNCE_SECONDS = 3
 # ---------------------------------------------------------------------------
 
 cloudinary.config(
@@ -222,8 +217,8 @@ def build_jekyll_filename(fm: dict, source_stem: str) -> str:
 # Git helpers
 # ---------------------------------------------------------------------------
 
-def git_delete_and_push(post_path: Path) -> bool:
-    """Remove a post from git, commit, and push. Returns True on success."""
+def git_delete_and_commit(post_path: Path) -> bool:
+    """Remove a post from git and commit (no push). Returns True on success."""
     try:
         rel = post_path.relative_to(REPO_DIR)
         subprocess.run(
@@ -240,19 +235,15 @@ def git_delete_and_push(post_path: Path) -> bool:
                 return True
             log_err(f"git commit failed: {result.stderr.strip()}")
             return False
-        subprocess.run(
-            ["git", "push"],
-            cwd=REPO_DIR, check=True, capture_output=True,
-        )
-        log_ok(f"Unpublished {post_path.name}")
+        log_ok(f"Committed unpublish of {post_path.name}")
         return True
     except subprocess.CalledProcessError as exc:
         log_err(f"git error: {exc.stderr.decode().strip() if exc.stderr else exc}")
         return False
 
 
-def git_commit_and_push(post_path: Path) -> bool:
-    """Stage only _posts/, commit, and push. Returns True on success."""
+def git_add_and_commit(post_path: Path) -> bool:
+    """Stage a post file and commit (no push). Returns True on success."""
     try:
         rel = post_path.relative_to(REPO_DIR)
         subprocess.run(
@@ -265,22 +256,30 @@ def git_commit_and_push(post_path: Path) -> bool:
             cwd=REPO_DIR, capture_output=True, text=True,
         )
         if result.returncode != 0:
-            # Nothing to commit is not a real error
             if "nothing to commit" in result.stdout + result.stderr:
                 log_info("Nothing new to commit (file already up to date).")
                 return True
             log_err(f"git commit failed: {result.stderr.strip()}")
             return False
-
-        subprocess.run(
-            ["git", "push"],
-            cwd=REPO_DIR, check=True, capture_output=True,
-        )
-        log_ok(f"Pushed {post_path.name} to GitHub Pages")
+        log_ok(f"Committed {post_path.name}")
         return True
 
     except subprocess.CalledProcessError as exc:
         log_err(f"git error: {exc.stderr.decode().strip() if exc.stderr else exc}")
+        return False
+
+
+def git_push() -> bool:
+    """Push all committed changes to remote. Returns True on success."""
+    try:
+        subprocess.run(
+            ["git", "push"],
+            cwd=REPO_DIR, check=True, capture_output=True,
+        )
+        log_ok("Pushed to GitHub Pages")
+        return True
+    except subprocess.CalledProcessError as exc:
+        log_err(f"git push failed: {exc.stderr.decode().strip() if exc.stderr else exc}")
         return False
 
 
@@ -307,14 +306,15 @@ def detect_category(source_path: Path) -> tuple[str | None, str | None]:
     return slugify(folder), folder
 
 
-def process_file(source_path: Path) -> None:
+def process_file(source_path: Path) -> bool:
+    """Process a single file: transform, commit. Returns True on success."""
     print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Processing: {source_path.name}")
 
     try:
         raw = source_path.read_text(encoding="utf-8")
     except OSError as exc:
         log_err(f"Could not read file: {exc}")
-        return
+        return False
 
     # 1. Parse / generate front matter
     fm, body = parse_or_generate_front_matter(source_path, raw)
@@ -347,20 +347,21 @@ def process_file(source_path: Path) -> None:
     post_path.write_text(output, encoding="utf-8")
     log_ok(f"Written → {post_path}")
 
-    # 6. Commit and push
-    success = git_commit_and_push(post_path)
+    # 6. Commit (push happens once at the end of scan_and_process)
+    success = git_add_and_commit(post_path)
     if not success:
-        log_err("Deploy failed — original file left in place")
-        return
+        log_err("Commit failed — original file left in place")
+        return False
 
     # 7. Move original to published/
     PUBLISHED_DIR.mkdir(parents=True, exist_ok=True)
     dest = PUBLISHED_DIR / source_path.name
     shutil.move(str(source_path), dest)
     log_ok(f"Moved original → {dest}")
+    return True
 
 
-def delete_post(deleted_path: Path) -> None:
+def delete_post(deleted_path: Path) -> bool:
     """Find and remove the Jekyll post that corresponds to a deleted published file."""
     print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Unpublishing: {deleted_path.name}")
 
@@ -369,89 +370,62 @@ def delete_post(deleted_path: Path) -> None:
 
     if not matches:
         log_err(f"No matching post found in _posts/ for '{deleted_path.name}'")
-        return
+        return False
 
     post_path = matches[0]
-    git_delete_and_push(post_path)
+    return git_delete_and_commit(post_path)
 
 
 # ---------------------------------------------------------------------------
-# Watchdog handler with debounce
+# Scan-and-process (manual trigger entry point)
 # ---------------------------------------------------------------------------
 
-class MarkdownHandler(FileSystemEventHandler):
-    def __init__(self) -> None:
-        super().__init__()
-        # Map path → timestamp of last event
-        self._pending: dict[str, float] = {}
-
-    def _schedule(self, path: str) -> None:
-        self._pending[path] = time.monotonic()
-
-    def on_created(self, event) -> None:
-        if not event.is_directory and event.src_path.endswith(".md"):
-            self._schedule(event.src_path)
-
-    def on_modified(self, event) -> None:
-        if not event.is_directory and event.src_path.endswith(".md"):
-            self._schedule(event.src_path)
-
-    def on_moved(self, event) -> None:
-        if not event.is_directory and event.dest_path.endswith(".md"):
-            self._schedule(event.dest_path)
-
-    def on_deleted(self, event) -> None:
-        if not event.is_directory and event.src_path.endswith(".md"):
-            p = Path(event.src_path)
-            if p.parent == PUBLISHED_DIR:
-                delete_post(p)
-
-    def flush_pending(self) -> None:
-        """Called on each poll tick — fire handlers whose debounce has elapsed."""
-        now  = time.monotonic()
-        done = []
-        for path, ts in list(self._pending.items()):
-            if now - ts >= DEBOUNCE_SECONDS:
-                done.append(path)
-
-        for path in done:
-            del self._pending[path]
-            p = Path(path)
-            # Skip files already inside the published/ subdirectory
-            if p.parent == PUBLISHED_DIR:
-                continue
-            if p.exists():
-                process_file(p)
-
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
-
-def main() -> None:
+def scan_and_process() -> None:
     print("=" * 60)
     print(" Obsidian → GitHub Pages publisher")
-    print(f" Watching: {VAULT_PUBLISH_DIR}")
+    print(f" Scanning: {VAULT_PUBLISH_DIR}")
     print("=" * 60)
 
     VAULT_PUBLISH_DIR.mkdir(parents=True, exist_ok=True)
     PUBLISHED_DIR.mkdir(parents=True, exist_ok=True)
 
-    handler  = MarkdownHandler()
-    observer = Observer()
-    observer.schedule(handler, str(VAULT_PUBLISH_DIR), recursive=True)
-    observer.start()
+    changes = 0
 
-    try:
-        while True:
-            time.sleep(1)
-            handler.flush_pending()
-    except KeyboardInterrupt:
-        log_info("Shutting down…")
-    finally:
-        observer.stop()
-        observer.join()
+    # --- Detect unpublishes: posts in _posts/ with no matching source in published/ ---
+    if POSTS_DIR.exists():
+        published_slugs = {slugify(p.stem) for p in PUBLISHED_DIR.glob("*.md")}
+        for post in POSTS_DIR.glob("*.md"):
+            # post.stem is like "2026-02-20-my-post-title"; strip the date prefix
+            post_slug = slugify(post.stem[11:])
+            if post_slug not in published_slugs:
+                if git_delete_and_commit(post):
+                    changes += 1
+
+    # --- Detect publishes: .md files in VAULT_PUBLISH_DIR (not inside published/) ---
+    pending = [
+        p for p in VAULT_PUBLISH_DIR.glob("*.md")
+    ] + [
+        p for p in VAULT_PUBLISH_DIR.glob("*/*.md")
+        if p.parent != VAULT_PUBLISH_DIR and not str(p).startswith(str(PUBLISHED_DIR))
+    ]
+
+    # Filter out any files inside published/ that slipped through
+    pending = [p for p in pending if PUBLISHED_DIR not in p.parents]
+
+    if not pending and changes == 0:
+        log_info("Nothing to do.")
+    else:
+        for source_path in pending:
+            if process_file(source_path):
+                changes += 1
+
+        if changes > 0:
+            git_push()
+        else:
+            log_info("No changes committed — skipping push.")
+
+    print("\nDone.")
 
 
 if __name__ == "__main__":
-    main()
+    scan_and_process()
