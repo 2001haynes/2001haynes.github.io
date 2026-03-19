@@ -12,7 +12,28 @@
         {% if settings.dgEnableSearch === true%}
             {% include "components/searchButton.njk" %}
         {%endif%}
+        <button id="theme-toggle" aria-label="Toggle dark/light mode">🌙</button>
     </nav>
+    <script>
+        (function() {
+            const btn = document.getElementById('theme-toggle');
+            const body = document.body;
+            const saved = localStorage.getItem('theme');
+            if (saved) {
+                body.classList.remove('theme-dark', 'theme-light');
+                body.classList.add('theme-' + saved);
+                btn.textContent = saved === 'dark' ? '🌙' : '☀️';
+            }
+            btn.addEventListener('click', function() {
+                const isDark = body.classList.contains('theme-dark');
+                body.classList.toggle('theme-dark', !isDark);
+                body.classList.toggle('theme-light', isDark);
+                const next = isDark ? 'light' : 'dark';
+                localStorage.setItem('theme', next);
+                btn.textContent = next === 'dark' ? '🌙' : '☀️';
+            });
+        })();
+    </script>
     {%else%}
     <div class="empty-navbar" >
         {% if settings.dgEnableSearch === true%}
