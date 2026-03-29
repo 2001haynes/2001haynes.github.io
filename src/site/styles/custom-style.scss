@@ -1,15 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Spectral+SC:wght@400;600&display=swap');
+// ─── THEME VARIABLES ────────────────────────────────────────────────────────
+// Change everything from here
+
+$font-url:    'https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=Spectral+SC:wght@400;600&display=swap';
+$font-family: 'Spectral', Georgia, serif;
+
+// Light mode
+$light-bg:    #ffffff;
+$light-text:  #000000;
+$light-muted: #444444;
+
+// Dark mode
+$dark-bg:     #000000;
+$dark-text:   #ffffff;
+$dark-muted:  #cccccc;
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+@import url($font-url);
 
 body {
-    font-family: 'Spectral', Georgia, serif;
+    font-family: $font-family;
 
     .navbar {
-        background-color: #2d4a1e;
-        color: #f5efe0;
-
-        h1 {
-            color: #f5efe0;
-        }
+        background-color: $dark-bg;
+        color: $dark-text;
+        h1 { color: $dark-text; }
     }
 
     #theme-toggle {
@@ -22,46 +37,26 @@ body {
     }
 
     &.theme-light, &.theme-dark {
-        font-family: 'Spectral', Georgia, serif !important;
+        font-family: $font-family !important;
     }
 
     &.theme-light {
-        background-color: #ffffff;
-        color: #000000;
+        background-color: $light-bg;
+        color: $light-text;
 
-        .content {
-            background-color: #ffffff;
-            color: #000000;
-        }
-
-        .navbar {
-            background-color: #ffffff;
-            color: #000000;
-
-            h1 { color: #000000; }
-        }
-
-        a { color: #000000; }
-        a:hover { color: #444444; }
+        .content { background-color: $light-bg; color: $light-text; }
+        .navbar { background-color: $light-bg; color: $light-text; h1 { color: $light-text; } }
+        a { color: $light-text; }
+        a:hover { color: $light-muted; }
     }
 
     &.theme-dark {
-        background-color: #000000;
-        color: #ffffff;
+        background-color: $dark-bg;
+        color: $dark-text;
 
-        .content {
-            background-color: #000000;
-            color: #ffffff;
-        }
-
-        .navbar {
-            background-color: #000000;
-            color: #ffffff;
-
-            h1 { color: #ffffff; }
-        }
-
-        a { color: #ffffff; }
-        a:hover { color: #cccccc; }
+        .content { background-color: $dark-bg; color: $dark-text; }
+        .navbar { background-color: $dark-bg; color: $dark-text; h1 { color: $dark-text; } }
+        a { color: $dark-text; }
+        a:hover { color: $dark-muted; }
     }
 }
