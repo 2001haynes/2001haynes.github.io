@@ -2,15 +2,17 @@
 {"dg-publish":true,"permalink":"/garden/home/","tags":["gardenEntry"]}
 ---
 
-Currently Working on this site. The goal is to capture my design progress in one place as it happens. I want to  
+Welcome to my garden. While I get my website up and running here are some of the things I'm working on:
+## Day Projects
+[[garden/Day Projects/Yurt Lattice Hanger\|Yurt Lattice Hanger]]
 
 
-Projects:
+## [[Photography\|Photography]]
 
 [[garden/RUNA\|RUNA]]
 
-[[Bed Speaker Ideation\|Bed Speaker Ideation]]
+[[garden/Website Home Page Ideation\|Website Home Page Ideation]]
 
-[[Website Home Page Ideation\|Website Home Page Ideation]]
+
 
 
