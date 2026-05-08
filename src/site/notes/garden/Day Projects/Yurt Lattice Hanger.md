@@ -3,8 +3,8 @@
 ---
 
 ![_MG_2337.jpg](/img/user/80-%20Attachments/_MG_2337.jpg)
-## Intent 
-Design a hanger that interfaces with my yurt's lattice walls to take advantage of unused space.
+## Yurt Hang
+a family of hangers for yurt organization and decoration
 ## Design Specifications
 A successful yurt lattice hanger will:
 - be plenty strong to hold my instruments
