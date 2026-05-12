@@ -2,10 +2,17 @@
 {"dg-publish":true,"permalink":"/garden/home/","tags":["gardenEntry"]}
 ---
 
-Engineering and design based out of Bellingham, WA
+Welcome to my garden. While I get my website up and running here are some of the things I'm working on:
+## Day Projects
+[[garden/Day Projects/Yurt Lattice Hanger\|Yurt Lattice Hanger]]
 
-#### Selected Projects:
+
+## [[Photography\|Photography]]
+
 [[garden/RUNA\|RUNA]]
-![Runa Pic.png](/img/user/80-%20Attachments/Runa%20Pic.png)
 
-![Pasted image 20260422193259.png](/img/user/80-%20Attachments/Pasted%20image%2020260422193259.png)
+[[garden/Website Home Page Ideation\|Website Home Page Ideation]]
+
+
+
+
