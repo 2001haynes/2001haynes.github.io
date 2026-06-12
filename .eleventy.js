@@ -141,24 +141,6 @@ module.exports = function(eleventyConfig) {
     })
     .use(namedHeadingsFilter)
     .use(function(md) {
-      md.inline.ruler.before('image', 'model3d', function(state, silent) {
-        const src = state.src.slice(state.pos);
-        const match = src.match(/^!\[\[([^|\]]+\.(glb|gltf))(?:\|[^\]]*)?\]\]/i);
-        if (!match) return false;
-        if (!silent) {
-          const token = state.push('model3d', '', 0);
-          token.content = match[1];
-        }
-        state.pos += match[0].length;
-        return true;
-      });
-      md.renderer.rules.model3d = function(tokens, idx) {
-        const fileName = tokens[idx].content;
-        const src = `/img/${fileName}`;
-        return `<model-viewer src="${src}" alt="${fileName}" auto-rotate camera-controls style="width:100%;height:400px;"></model-viewer>`;
-      };
-    })
-    .use(function(md) {
       //https://github.com/DCsunset/markdown-it-mermaid-plugin
       const origFenceRule =
         md.renderer.rules.fence ||
@@ -332,6 +314,13 @@ module.exports = function(eleventyConfig) {
 
   eleventyConfig.addFilter("isoDate", function(date) {
     return date && date.toISOString();
+  });
+
+  eleventyConfig.addFilter("embedModels", function(str) {
+    return str && str.replace(
+      /!\[\[([^|\]]+\.(glb|gltf))(?:\|[^\]]*)?\]\]/gi,
+      (_, filePath) => `<model-viewer src="/img/${filePath}" alt="${filePath}" auto-rotate camera-controls style="width:100%;height:400px;"></model-viewer>`
+    );
   });
 
   eleventyConfig.addFilter("link", function(str) {
