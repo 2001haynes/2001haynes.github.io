@@ -5,7 +5,7 @@
 Welcome to my garden. While I get my website up and running here are some of the things I'm working on:
 ## Day Projects
 [[garden/Day Projects/Yurt Lattice Hanger\|Yurt Lattice Hanger]]
-
+[[garden/Day Projects/3D sketching\|3D sketching]]
 
 ## [[Photography\|Photography]]
 

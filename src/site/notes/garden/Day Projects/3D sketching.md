@@ -6,5 +6,5 @@ Got this new 3D sketching app Feather for iPad, trying to figure out how to embe
 
 This morning I sketched a truck:
 
-![[TruckSketch.glb]]
+![[models/TruckSketch.glb\|models/TruckSketch.glb]]
 
