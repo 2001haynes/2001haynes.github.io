@@ -143,7 +143,7 @@ module.exports = function(eleventyConfig) {
     .use(function(md) {
       md.inline.ruler.before('image', 'model3d', function(state, silent) {
         const src = state.src.slice(state.pos);
-        const match = src.match(/^!\[\[([^\]]+\.(glb|gltf))\]\]/i);
+        const match = src.match(/^!\[\[([^|\]]+\.(glb|gltf))(?:\|[^\]]*)?\]\]/i);
         if (!match) return false;
         if (!silent) {
           const token = state.push('model3d', '', 0);
