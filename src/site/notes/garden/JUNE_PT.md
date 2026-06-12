@@ -9,3 +9,4 @@ Today was the first day I’ve been able to bike! Still having some pain above m
 ## Wednesday May 27
 Finally getting around to set up this note and get some consistency going with my systems. I did toe yoga in the morning and going on a mountain bike ride around noon
 
+Foot exercise v2 
