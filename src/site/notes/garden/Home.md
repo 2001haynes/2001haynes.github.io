@@ -7,12 +7,12 @@ Welcome to my garden. While I get my website up and running here are some of the
 [[garden/Day Projects/Yurt Lattice Hanger\|Yurt Lattice Hanger]]
 [[garden/Day Projects/3D sketching\|3D sketching]]
 
-## [[Photography\|Photography]]
+[[Photography\|Photography]]
 
 [[garden/RUNA\|RUNA]]
 
-[[garden/Website Home Page Ideation\|Website Home Page Ideation]]
-
+Design in Progress
+[[garden/Bed Speaker Ideation\|Bed Speaker Ideation]]
 
 
 
